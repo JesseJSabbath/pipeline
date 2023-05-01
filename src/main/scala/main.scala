@@ -1,9 +1,12 @@
 import scala.io.StdIn.readLine
 import scala.util.control.Breaks
+import DataLoad._
 
 object DataPipeline  {
   def main(args: Array[String]): Unit = {
+    DataLoad.dataLoad
     mainMenu
+    
   }
     
   def mainMenu: Unit = {

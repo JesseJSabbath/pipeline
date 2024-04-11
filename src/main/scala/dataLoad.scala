@@ -9,12 +9,29 @@ import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.types._
 import org.apache.spark._
 import org.apache.spark.sql.functions._
+import org.apache.log4j.Logger
+import org.apache.log4j.Level
 
 import java.util.Date
 import scala.Console.println
+import org.apache.log4j.PropertyConfigurator
+
+/*import com.coxautodata.vegalite4s.VegaLite  
+import com.coxautodata.vegalite4s.renderers.ImplicitRenderers.AutoSelectionRenderer
+import com.coxautodata.vegalite4s.spark.PlotHelpers._
+import vegas._ 
+import vegas.render.WindowRenderer._ 
+import vegas.sparkExt._ 
+import io.circe._
+import io.circe.generic.auto._
+import io.circe.parser._
+import io.circe.syntax._*/
+
 
 object DataLoad {
     def dataLoad: Unit = {
+       
+
         val spark = SparkSession
             .builder
             .config("spark.master", "local")
@@ -22,8 +39,11 @@ object DataLoad {
             .config("hive.exec.dynamic.partition.mode", "nonstrict")
             .enableHiveSupport()
             .getOrCreate()
-        
-        spark.sparkContext.setLogLevel("WARN")
+            
+        var log4jConfPath = "/home/jesse/scala/pipeline/src/main/resources/log4j2.properties";
+
+        PropertyConfigurator.configure(log4jConfPath)
+
         import spark.implicits._
         //val apiUrl = "https://raw.githubusercontent.com/platformps/LoanDataset/main/loan_data.json"
         val apiUrl = "https://raw.githubusercontent.com/JesseJSabbath/CourseraWebDevBasics/main/loan_data.json"
@@ -36,26 +56,73 @@ object DataLoad {
         
         var connection: Connection = DriverManager.getConnection(dbUrl,username,password)
         var r = requests.get(apiUrl)
-        println("Status Code: " + r.statusCode)
         println("Succesfully downloaded data from API")
-
-        var statement = connection.createStatement
-        var rs = statement.executeQuery("SELECT * FROM cdw_sapp_customer")
-        while(rs.next) {
-            print(rs.getString("first_name") + " ")
-            println(rs.getString("last_name"))
-        }
-
-
-        //rs = statement.executeUpdate("create table loan_data")
-
-        val jsonStr = r.text
-        val df = spark.read.json(Seq(jsonStr).toDS)
-        df.show
-        df.printSchema
+        println("Status Code: " + r.statusCode)
         
 
+        
 
+        
+        val jsonStr = r.text
+        val df = spark.read.json(Seq(jsonStr).toDS)
+        println(df.getClass)
+      
+        df.show
+        df.printSchema
+        df.write
+            .format("jdbc")
+            .option("url","jdbc:mysql://localhost:3306/creditcard_db?autoReconnect=true&useSSL=false")
+            .option("dbtable", "cdw_sapp_loan_application")
+            .option("user",username)
+            .option("password",password)
+            .mode("append")
+            .save
+
+       /*s VegaLite()
+            .withObject("""
+            {
+            "$schema": "https://vega.github.io/schema/vega-lite/v3.json",
+            "description": "A simple bar chart with embedded data.",
+            "data": {
+                "values": [
+                {"a": "A","b": 28}, {"a": "B","b": 55}, {"a": "C","b": 43},
+                {"a": "D","b": 91}, {"a": "E","b": 81}, {"a": "F","b": 53},
+                {"a": "G","b": 19}, {"a": "H","b": 87}, {"a": "I","b": 52}
+                ]
+            },
+            "mark": "bar",
+            "encoding": {
+                "x": {"field": "a", "type": "ordinal"},
+                "y": {"field": "b", "type": "quantitative"}
+            }
+            }""")
+            .show*/
+        
+            var mfDF = df.groupBy("Gender").agg(count("Gender").as("GenCount"))
+            mfDF.show
+        
+/*        VegaLite()
+            .withData(mfDF)
+            .withObject("""
+            {
+                "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+            "description": "A simple bar chart with embedded data.",
+            "mark": "line",
+            "encoding": {
+                "x": {"field": "Gender", "type": "ordinal"},
+                "y": {"field": "GenCount", "type": "quantitative"}
+            }
+            }""")
+            .show
+            Thread.sleep(25000)
+            val plot = Vegas("Loan_Info")
+                .withDataFrame(df)
+                .encodeX("Gender",Nom)
+                .encodeY("GenCount", Quant)
+                .mark(Bar)
+
+            plot.window.show 
+*/
         //read and transfomrmation of JSON files below
         val cust_raw = spark.read.json("/home/jesse/scala/pipeline/cdw_sapp_customer.json")
         val branch_raw = spark.read.json("/home/jesse/scala/pipeline/cdw_sapp_branch.json")
@@ -65,15 +132,7 @@ object DataLoad {
         branch_raw.printSchema
         credit_raw.printSchema
 
-        
-      
-
-        //deleted in lieu of withcolumn concatenationa
-        //get 3rd colloumn as array of strings
-        //df.rdd.collect.map(row=>row.getString(3))
-      //convert original to array of strings in correct format
-     // res31.map(num =>  "(" + num.slice(0,3) + ")" + num.slice(3,6) + "-" + num.slice(6,10))
-        
+        //transform and write based on mapping document
         var branchDF = branch_raw.select(col("*"), substring(col("BRANCH_PHONE"), 1,3).as("BP1"))        
             .select(col("*"), substring(col("BRANCH_PHONE"), 4,3).as("BP2"))
             .select(col("*"), substring(col("BRANCH_PHONE"), 7,4).as("BP3"))
@@ -124,18 +183,12 @@ object DataLoad {
             .save
         custDF.show
         println(custDF)
+
+        
+
+
     }
 
-    /*def writeTable(tableName: String, df: DataFrame<Row>): Unit = {
-        df.write
-            .format("jdbc")
-            .option("url","jdbc:mysql://localhost:3306/creditcard_db?autoReconnect=true&useSSL=false")
-            .option("dbtable", tableName)
-            .option("user",username)
-            .option("password",password)
-            .mode("append")
-            .save
-    }*/
 }
 
 

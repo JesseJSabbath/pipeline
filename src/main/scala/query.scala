@@ -35,11 +35,11 @@ object Queries {
 
     //Customer Details queries
     def customerAccountDetails() {
-        prinln("implement check existing account details of a customer")
+        println("implement check existing account details of a customer")
     }
 
     def customerUpdateDetails() {
-        printn("implement modify existing account details of a customer")
+        println("implement modify existing account details of a customer")
     }
 
     def customerMonthlyBill() {
@@ -81,25 +81,25 @@ object Queries {
     }
     
 
-      def getConnection: Connection = {
-      val dbUrl = "jdbc:mysql://localhost:3306/creditcard_db?autoReconnect=true&useSSL=false"
-      val driver = "com.mysql.cj.jdbc.Driver"
-      val filePath = "/home/jesse/scala/pipeline/.secret.txt"
-      val creds = Source.fromFile(filePath).getLines.toArray
-      val username = creds(0)
-      val password = creds(1)
-      var connection: Connection = DriverManager.getConnection(dbUrl,username,password)
-      connection
-  }
+    def getConnection: Connection = {
+        val dbUrl = "jdbc:mysql://localhost:3306/creditcard_db?autoReconnect=true&useSSL=false"
+        val driver = "com.mysql.cj.jdbc.Driver"
+        val filePath = "/home/jesse/scala/pipeline/.secret.txt"
+        val creds = Source.fromFile(filePath).getLines.toArray
+        val username = creds(0)
+        val password = creds(1)
+        var connection: Connection = DriverManager.getConnection(dbUrl,username,password)
+        connection
+    }
 
     def purgeDB(connection:Connection): Unit = {
-    var statement = connection.createStatement
-    var rs = statement.executeUpdate("truncate cdw_sapp_loan_application")
-    rs = statement.executeUpdate("truncate cdw_sapp_customer")
-    rs = statement.executeUpdate("truncate cdw_sapp_branch")
-    rs = statement.executeUpdate("truncate cdw_sapp_credit_card")
-    println("all tables truncated")
-  }
+        var statement = connection.createStatement
+        var rs = statement.executeUpdate("truncate cdw_sapp_loan_application")
+        rs = statement.executeUpdate("truncate cdw_sapp_customer")
+        rs = statement.executeUpdate("truncate cdw_sapp_branch")
+        rs = statement.executeUpdate("truncate cdw_sapp_credit_card")
+        println("all tables truncated")
+    }
 
     
 }

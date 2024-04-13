@@ -55,14 +55,14 @@ object DataLoad {
         val password = creds(1)
         
         var connection: Connection = DriverManager.getConnection(dbUrl,username,password)
+
+        //get Loan data file from API (GDrive)
         var r = requests.get(apiUrl)
         println("Succesfully downloaded data from API")
         println("Status Code: " + r.statusCode)
         
 
-        
-
-        
+        //transform 
         val jsonStr = r.text
         val df = spark.read.json(Seq(jsonStr).toDS)
         println(df.getClass)

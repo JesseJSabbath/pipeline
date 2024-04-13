@@ -24,9 +24,17 @@ object DataPipeline  {
   def main(args: Array[String]): Unit = {
    
     //var connection = getConnection
-    Queries.testHello
+   
     DataLoad.dataLoad
     Queries.names
+    Queries.transactionsTopTypes
+    Queries.customersTopStateCounts
+    Queries.approvalsSelfEmployed
+    Queries.rejectionsMarriedMale
+    Queries.transactionsTopDollarHealthcare
+    Queries.testHello
+    Queries.customersTop10Sums
+    Queries.transactionsByType("Healthcare")
     /*var statement = connection.createStatement
         var rs = statement.executeQuery("SELECT * FROM cdw_sapp_customer")
         while(rs.next) {
@@ -36,7 +44,7 @@ object DataPipeline  {
     mainMenu
     
   
-    Queries.purgeDB(connection) //comment out when actually appending new files
+    Queries.purgeDB //comment out when actually appending new files
     
   }
     
